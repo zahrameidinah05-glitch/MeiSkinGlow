@@ -14,10 +14,9 @@ import cv2
 from flask import Flask, render_template, request, url_for
 from PIL import Image
 
-app = Flask(__name__)
-
 # ── Configuration ────────────────────────────────────────────────────────────
-BASE_DIR        = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR        = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+app = Flask(__name__, template_folder=os.path.join(BASE_DIR, 'templates'), static_folder=os.path.join(BASE_DIR, 'static'))
 UPLOAD_DIR      = os.path.join(BASE_DIR, 'static', 'uploads')
 MODEL_SKIN_PATH = os.path.join(BASE_DIR, 'models', 'skin_type_model.tflite')
 MODEL_ACNE_PATH = os.path.join(BASE_DIR, 'models', 'acne_type_model.tflite')
