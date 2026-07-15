@@ -19,8 +19,8 @@ app = Flask(__name__)
 # ── Configuration ────────────────────────────────────────────────────────────
 BASE_DIR        = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_DIR      = os.path.join(BASE_DIR, 'static', 'uploads')
-MODEL_SKIN_PATH = os.path.join(BASE_DIR, 'models', 'skin_type_model.keras')
-MODEL_ACNE_PATH = os.path.join(BASE_DIR, 'models', 'acne_type_model.keras')
+MODEL_SKIN_PATH = os.path.join(BASE_DIR, 'models', 'skin_type_model.tflite')
+MODEL_ACNE_PATH = os.path.join(BASE_DIR, 'models', 'acne_type_model.tflite')
 
 app.config['UPLOAD_FOLDER']      = UPLOAD_DIR
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024   # 16 MB
@@ -31,46 +31,15 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 model_skin = None
 model_acne = None
 
-def load_custom_model(model_path):
-    import zipfile
-    import json
-    import tempfile
-    import shutil
-    import tensorflow as tf
-    import os
+try:
+    from tflite_runtime.interpreter import Interpreter
+except ImportError:
+    from tensorflow.lite import Interpreter
 
-    temp_dir = tempfile.mkdtemp()
-    try:
-        with zipfile.ZipFile(model_path, 'r') as z:
-            # Extract weights
-            weights_path = os.path.join(temp_dir, "model.weights.h5")
-            with open(weights_path, "wb") as f:
-                f.write(z.read("model.weights.h5"))
-            
-            # Load config
-            config_bytes = z.read("config.json")
-            config_dict = json.loads(config_bytes.decode('utf-8'))
-            
-            # Modify config to remove the Lambda layer (Layer 1)
-            layers = config_dict["config"]["layers"]
-            lambda_idx = -1
-            for idx, layer in enumerate(layers):
-                if layer.get('class_name') == 'Lambda':
-                    lambda_idx = idx
-                    break
-            
-            if lambda_idx != -1:
-                layers.pop(lambda_idx)
-            
-            # Re-create model from modified config using keras
-            import keras
-            model = keras.saving.deserialize_keras_object(config_dict)
-            
-            # Load weights
-            model.load_weights(weights_path)
-            return model
-    finally:
-        shutil.rmtree(temp_dir)
+def load_tflite_model(model_path):
+    interpreter = Interpreter(model_path=model_path)
+    interpreter.allocate_tensors()
+    return interpreter
 
 def load_cnn_models():
     global model_skin, model_acne
@@ -79,20 +48,27 @@ def load_cnn_models():
     try:
         # Load Skin Type Model
         if os.path.exists(MODEL_SKIN_PATH):
-            model_skin = load_custom_model(MODEL_SKIN_PATH)
+            model_skin = load_tflite_model(MODEL_SKIN_PATH)
             print(f"[INFO] Successfully loaded Skin Type model from {MODEL_SKIN_PATH}")
         else:
             print(f"[WARN] Skin Type model not found at {MODEL_SKIN_PATH}")
             
         # Load Acne Type Model
         if os.path.exists(MODEL_ACNE_PATH):
-            model_acne = load_custom_model(MODEL_ACNE_PATH)
+            model_acne = load_tflite_model(MODEL_ACNE_PATH)
             print(f"[INFO] Successfully loaded Acne Type model from {MODEL_ACNE_PATH}")
         else:
             print(f"[WARN] Acne Type model not found at {MODEL_ACNE_PATH}")
             
     except Exception as e:
         print(f"[ERROR] Failed to load models: {e}")
+
+def predict_tflite(interpreter, inp):
+    input_details = interpreter.get_input_details()
+    output_details = interpreter.get_output_details()
+    interpreter.set_tensor(input_details[0]['index'], inp)
+    interpreter.invoke()
+    return interpreter.get_tensor(output_details[0]['index'])[0]
 
 # ── Class mapping (alphabetical matches) ──────────────────────────────────────
 import unicodedata
@@ -412,7 +388,7 @@ def process():
     if model_skin is None or model_acne is None:
         return render_template(
             'analyze.html',
-            error_message='Model kecerdasan buatan (AI) belum siap. Pastikan "skin_type_model.keras" dan "acne_type_model.keras" berada di dalam direktori models/.'
+            error_message='Model kecerdasan buatan (AI) belum siap. Pastikan "skin_type_model.tflite" dan "acne_type_model.tflite" berada di dalam direktori models/.'
         )
 
     filename = None
@@ -463,15 +439,15 @@ def process():
     inp      = np.expand_dims(img_arr, axis=0)
     
     # Preprocess manually since Lambda layer is removed to prevent Python version mismatch crash
-    import tensorflow as tf
-    inp      = tf.keras.applications.mobilenet_v2.preprocess_input(inp)
+    # MobileNetV2 uses (x / 127.5) - 1.0 preprocessing
+    inp = (inp / 127.5) - 1.0
 
     # ── CNN inferences ────────────────────────────────────────────────────────
     # 1. Predict Skin Type (Dry, Normal, Oily)
-    pred_skin = model_skin.predict(inp, verbose=0)[0]
+    pred_skin = predict_tflite(model_skin, inp)
 
     # 2. Predict Acne Type (Blackheads, Cysts, None, Papules, Pustules, Whiteheads)
-    pred_acne = model_acne.predict(inp, verbose=0)[0]
+    pred_acne = predict_tflite(model_acne, inp)
 
     # ── OpenCV-based Hybrid Classification with Smooth Fusion ─────────────────
     # Convert face crop to HSV and extract channels
