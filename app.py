@@ -25,7 +25,9 @@ MODEL_ACNE_PATH = os.path.join(BASE_DIR, 'models', 'acne_type_model.tflite')
 app.config['UPLOAD_FOLDER']      = UPLOAD_DIR
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024   # 16 MB
 
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024   # 16 MB
+
+# No need to create UPLOAD_DIR on Vercel as we use in-memory processing
 
 # ── Lazy-load CNN models ───────────────────────────────────────────────────────
 model_skin = None
@@ -395,23 +397,25 @@ def process():
             error_message='Model kecerdasan buatan (AI) belum siap. Pastikan "skin_type_model.tflite" dan "acne_type_model.tflite" berada di dalam direktori models/.'
         )
 
-    filename = None
-
-    if 'file' in request.files:
-        f = request.files['file']
-        if not f or f.filename == '':
-            return render_template('analyze.html', error_message='Tidak ada berkas gambar yang dipilih.')
-        filename = f"upload_{int(time.time())}_{f.filename}"
-        filepath = os.path.join(UPLOAD_DIR, filename)
-        f.save(filepath)
-
-    if not filename:
+    if 'file' not in request.files:
         return render_template('analyze.html', error_message='Silakan unggah foto wajah.')
+        
+    f = request.files['file']
+    if not f or f.filename == '':
+        return render_template('analyze.html', error_message='Tidak ada berkas gambar yang dipilih.')
 
-    filepath = os.path.join(UPLOAD_DIR, filename)
-    img = cv2.imread(filepath)
+    # Read image from memory instead of saving to disk (Vercel is read-only)
+    filestr = f.read()
+    npimg = np.frombuffer(filestr, np.uint8)
+    img = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
+
     if img is None:
         return render_template('analyze.html', error_message='Format berkas tidak valid atau berkas rusak.')
+
+    # Encode image to base64 for display in result.html
+    _, buffer = cv2.imencode('.jpg', img)
+    b64_string = base64.b64encode(buffer).decode('utf-8')
+    image_url_b64 = f"data:image/jpeg;base64,{b64_string}"
 
     # ── OpenCV Haar Cascade face detection ────────────────────────────────────
     cascade_path  = cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
@@ -679,7 +683,7 @@ def process():
     # ── Confidence Gating (on primary_conf) ───────────────────────────────────
     is_very_low = primary_conf < CONF_LOW
     is_high_confidence = primary_conf >= CONF_HIGH
-    image_url  = url_for('static', filename=f'uploads/{filename}')
+    image_url  = image_url_b64
     is_kista   = (acne_class == 'cysts')
 
     return render_template(
