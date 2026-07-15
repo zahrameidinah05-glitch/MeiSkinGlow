@@ -1,0 +1,4 @@
+dataset/
+.git/
+__pycache__/
+*.ipynb
