@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MeiSkinGlow — Tentang AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+
+<body>
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="/"><i class="fa-solid fa-wand-magic-sparkles"></i> MeiSkinGlow</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="nav">
+                <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1 mt-2 mt-lg-0">
+                    <li class="nav-item"><a class="nav-link" href="/">Beranda</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/analyze">Analisis</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/about_ai">Tentang AI</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/dataset">Dataset</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="page-content">
+        <main class="container py-5">
+
+            <div class="text-center mb-5 fade-in-up">
+                <span class="pill-badge mb-3"><i class="fa-solid fa-graduation-cap"></i> Teori & Implementasi</span>
+                <h1 class="h2 fw-bold mb-2">Teknologi Kecerdasan Buatan</h1>
+                <p class="mx-auto" style="max-width:560px;">Pelajari cara kerja Computer Vision dan CNN di balik
+                    MeiSkinGlow.</p>
+            </div>
+
+            <!-- Two theory cards -->
+            <div class="row g-4 mb-5">
+                <div class="col-md-6 fade-in-up delay-1">
+                    <div class="glass-card h-100">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="step-num"
+                                style="flex-shrink:0; background:linear-gradient(135deg,#FF8C66,#FF9D6C);">
+                                <i class="fa-solid fa-eye" style="font-size:1rem;"></i>
+                            </div>
+                            <h3 class="h5 mb-0">Computer Vision</h3>
+                        </div>
+                        <p style="font-size:.93rem; line-height:1.75;">
+                            <strong>Computer Vision</strong> adalah cabang AI yang melatih komputer untuk memahami
+                            konten visual dari gambar dan video. Sistem ini dapat mengenali, memproses, dan
+                            menginterpretasikan objek dalam gambar seperti layaknya mata manusia.
+                        </p>
+                        <p class="mb-0" style="font-size:.93rem; line-height:1.75;">
+                            Di MeiSkinGlow, Computer Vision diimplementasikan menggunakan pustaka
+                            <strong>OpenCV</strong>
+                            dengan metode <em>Haar Cascade Face Detection</em>. Algoritma ini memindai gambar
+                            menggunakan
+                            ribuan fitur Haar untuk menemukan pola wajah manusia secara cepat dan efisien.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-6 fade-in-up delay-2">
+                    <div class="glass-card h-100">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="step-num" style="flex-shrink:0;">
+                                <i class="fa-solid fa-network-wired" style="font-size:1rem;"></i>
+                            </div>
+                            <h3 class="h5 mb-0">Convolutional Neural Network</h3>
+                        </div>
+                        <p style="font-size:.93rem; line-height:1.75;">
+                            <strong>CNN (Convolutional Neural Network)</strong> adalah arsitektur Deep Learning yang
+                            dirancang khusus untuk data gambar. CNN meniru korteks visual otak manusia dengan
+                            menerapkan filter konvolusi untuk mengekstrak fitur visual secara hierarkis.
+                        </p>
+                        <p class="mb-0" style="font-size:.93rem; line-height:1.75;">
+                            Model MeiSkinGlow dilatih menggunakan <strong>TensorFlow & Keras</strong>.
+                            Lapisan konvolusi belajar mengenali pola seperti pori-pori, bercak merah, kilap minyak,
+                            dan garis kering untuk mengklasifikasikan 5 jenis kulit dengan akurat.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pipeline flow -->
+            <div class="text-center mb-4 fade-in-up">
+                <h2 class="h4 fw-bold mb-2">Alur Kerja MeiSkinGlow</h2>
+                <p style="font-size:.93rem;">Dari foto mentah hingga rekomendasi skincare — 6 tahap pemrosesan AI.</p>
+            </div>
+
+            <div class="row g-3 mb-5">
+                {% set steps = [
+                ('📷', 'Input Foto', 'Pengguna mengunggah foto wajah.'),
+                ('🔍', 'Deteksi Wajah', 'OpenCV Haar Cascade memindai keberadaan wajah secara otomatis.'),
+                ('✂️', 'Crop & Resize', 'Area wajah dipotong lalu diubah ukurannya ke 160×160 piksel untuk input CNN.'),
+                ('🧠', 'Klasifikasi CNN', 'Model CNN berbasis arsitektur MobileNetV2 menganalisis dan memprediksi kondisi kulit wajah.'),
+                ('📊', 'Confidence Check', 'Skor keyakinan (Confidence Score) dievaluasi untuk memastikan keandalan hasil.'),
+                ('💄', 'Rekomendasi', 'Sistem mencocokkan diagnosis kulit dengan database kandungan & produk skincare.')
+                ] %}
+                {% for emoji, title, desc in steps %}
+                <div class="col-sm-6 col-lg-4 fade-in-up delay-{{ loop.index if loop.index <= 3 else loop.index - 3 }}">
+                    <div class="glass-card text-center h-100" style="padding:1.75rem 1.5rem;">
+                        <div style="font-size:2rem; margin-bottom:.75rem;">{{ emoji }}</div>
+                        <div class="step-num" style="width:32px;height:32px;font-size:.85rem;margin:0 auto .75rem;">{{
+                            loop.index }}</div>
+                        <h5 class="h6 fw-bold mb-2">{{ title }}</h5>
+                        <p class="mb-0" style="font-size:.84rem; color:var(--text-muted); line-height:1.6;">{{ desc }}
+                        </p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- CNN Architecture table -->
+            <div class="glass-card no-hover fade-in-up">
+                <h3 class="h5 fw-bold mb-4"><i class="fa-solid fa-code-branch me-2"
+                        style="color:var(--brand-b);"></i>Arsitektur Model CNN — MeiSkinGlow</h3>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" style="font-size:.88rem;">
+                        <thead>
+                            <tr style="background:var(--brand-b-pale);">
+                                <th style="border-radius:10px 0 0 0; padding:.85rem 1rem;">Model / Layer</th>
+                                <th>Jenis Operasi</th>
+                                <th style="border-radius:0 10px 0 0;">Fungsi / Output</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>MobileNetV2 Backbone</strong></td>
+                                <td><span class="badge"
+                                        style="background:rgba(255,140,102,0.1);color:var(--brand-a);">Feature
+                                        Extraction</span></td>
+                                <td>Menggunakan transfer learning model MobileNetV2 pre-trained (ImageNet) untuk
+                                    mengekstrak fitur tingkat tinggi dari gambar wajah (kedua model).</td>
+                            </tr>
+                            <tr>
+                                <td><strong>GlobalAveragePooling2D</strong></td>
+                                <td><span class="badge"
+                                        style="background:rgba(255,94,126,0.1);color:var(--brand-b);">Agregasi</span>
+                                </td>
+                                <td>Merangkum seluruh feature map dari MobileNetV2 menjadi vektor 1280-dimensi yang
+                                    ringkas.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Dense 128 + ReLU</strong></td>
+                                <td><span class="badge" style="background:rgba(255,190,0,0.1);color:#8a6200;">Fully
+                                        Connected</span></td>
+                                <td>Mempelajari kombinasi non-linear dari fitur-fitur yang diekstrak untuk keputusan
+                                    klasifikasi.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Dropout 0.35</strong></td>
+                                <td><span class="badge"
+                                        style="background:rgba(255,80,80,0.1);color:#c00;">Regularisasi</span></td>
+                                <td>Mematikan 35% neuron secara acak saat pelatihan untuk mencegah overfitting.</td>
+                            </tr>
+                             <tr>
+                                 <td><strong>Classification Head: Dense + Softmax</strong></td>
+                                 <td><span class="badge"
+                                         style="background:var(--gradient-main);color:#fff;">Output Layer</span></td>
+                                 <td>Menganalisis fitur wajah untuk menghasilkan probabilitas klasifikasi kondisi kulit (Normal, Kering, Berminyak, Sensitif, atau Berjerawat).
+                                 </td>
+                             </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="text-center mt-5 fade-in-up">
+                <a href="/analyze" class="btn btn-primary-custom px-5">
+                    <i class="fa-solid fa-play me-2"></i>Coba Analisis Sekarang
+                </a>
+            </div>
+
+        </main>
+    </div>
+
+    <footer>
+        <div class="container">
+            <span class="brand"><i class="fa-solid fa-wand-magic-sparkles"></i> MeiSkinGlow</span>
+            <p class="mb-0" style="font-size:.8rem; opacity:.5;">Dibuat untuk tugas Pengantar Kecerdasan Buatan · 2026
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

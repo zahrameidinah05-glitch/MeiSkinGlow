@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MeiSkinGlow — Dataset</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<nav class="navbar navbar-expand-lg">
+    <div class="container">
+        <a class="navbar-brand" href="/"><i class="fa-solid fa-wand-magic-sparkles"></i> MeiSkinGlow</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="nav">
+            <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1 mt-2 mt-lg-0">
+                <li class="nav-item"><a class="nav-link" href="/">Beranda</a></li>
+                <li class="nav-item"><a class="nav-link" href="/analyze">Analisis</a></li>
+                <li class="nav-item"><a class="nav-link" href="/about_ai">Tentang AI</a></li>
+                <li class="nav-item"><a class="nav-link active" href="/dataset">Dataset</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="page-content">
+<main class="container py-5">
+
+    <div class="text-center mb-5 fade-in-up">
+        <span class="pill-badge mb-3"><i class="fa-solid fa-chart-bar"></i> Informasi Dataset</span>
+        <h1 class="h2 fw-bold mb-2">Dataset Pelatihan Model CNN</h1>
+        <p class="mx-auto" style="max-width:560px;">Statistik dan distribusi data gambar sintetis lokal yang digunakan untuk melatih model klasifikasi kulit.</p>
+    </div>
+
+    <!-- Stat cards row -->
+    <div class="row g-4 mb-5">
+        <div class="col-6 col-md-3 fade-in-up delay-1">
+            <div class="glass-card text-center" style="padding:1.75rem 1rem;">
+                <div class="gradient-text fw-bold mb-1" style="font-size:2.5rem; font-family:'Outfit',sans-serif;">
+                    {{ acne_stats.grand_total + skin_stats.grand_total }}
+                </div>
+                <div class="fw-semibold" style="color:var(--dark); font-size:.92rem;">Total Gambar</div>
+                <div style="font-size:.78rem; color:var(--text-muted);">Keseluruhan dataset</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 fade-in-up delay-1">
+            <div class="glass-card text-center" style="padding:1.75rem 1rem;">
+                <div class="gradient-text fw-bold mb-1" style="font-size:2.5rem; font-family:'Outfit',sans-serif;">
+                    {{ acne_stats.totals|length }}
+                </div>
+                <div class="fw-semibold" style="color:var(--dark); font-size:.92rem;">Kategori Jerawat</div>
+                <div style="font-size:.78rem; color:var(--text-muted);">Kelas model jerawat</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 fade-in-up delay-2">
+            <div class="glass-card text-center" style="padding:1.75rem 1rem;">
+                <div class="gradient-text fw-bold mb-1" style="font-size:2.5rem; font-family:'Outfit',sans-serif;">
+                    {{ skin_stats.totals|length }}
+                </div>
+                <div class="fw-semibold" style="color:var(--dark); font-size:.92rem;">Kategori Tipe Kulit</div>
+                <div style="font-size:.78rem; color:var(--text-muted);">Kelas model kulit</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 fade-in-up delay-2">
+            <div class="glass-card text-center" style="padding:1.75rem 1rem;">
+                <div class="gradient-text fw-bold mb-1" style="font-size:2.5rem; font-family:'Outfit',sans-serif;">160²</div>
+                <div class="fw-semibold" style="color:var(--dark); font-size:.92rem;">Resolusi Gambar</div>
+                <div style="font-size:.78rem; color:var(--text-muted);">160 × 160 piksel</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart + table side by side -->
+    <div class="row g-4 mb-5">
+        <!-- Matplotlib chart -->
+        <div class="col-md-7 fade-in-up delay-2">
+            <div class="glass-card no-hover h-100" style="padding:1.5rem;">
+                <h3 class="h5 fw-bold mb-4"><i class="fa-solid fa-chart-column me-2" style="color:var(--brand-b);"></i>Distribusi Dataset per Kategori</h3>
+                <img src="{{ url_for('static', filename='images/dataset_chart.png') }}"
+                     alt="Grafik distribusi dataset"
+                     class="img-fluid rounded-3 w-100"
+                     onerror="this.src='https://placehold.co/600x380/F0E6FF/7835FF?text=Chart+Belum+Tersedia'">
+                <p class="mt-2 mb-0" style="font-size:.78rem; color:var(--text-muted); text-align:center;">
+                    Visualisasi dibuat otomatis oleh Matplotlib saat <code>train_model.py</code> dijalankan.
+                </p>
+            </div>
+        </div>
+
+        <!-- Per-class detail -->
+        <div class="col-md-5 fade-in-up delay-3">
+            <div class="glass-card no-hover h-100" style="padding:1.5rem;">
+                <h3 class="h5 fw-bold mb-4"><i class="fa-solid fa-table me-2" style="color:var(--brand-b);"></i>Detail per Kategori</h3>
+
+                <ul class="nav nav-pills mb-4 gap-2" id="datasetTab" role="tablist" style="background: rgba(255,255,255,0.05); padding: 5px; border-radius: 12px; border: 1px solid var(--border);">
+                    <li class="nav-item flex-fill" role="presentation">
+                        <button class="nav-link active w-100 fw-semibold py-2" id="acne-tab" data-bs-toggle="tab" data-bs-target="#acne-pane" type="button" role="tab" aria-controls="acne-pane" aria-selected="true" style="border-radius: 8px;">
+                            <i class="fa-solid fa-virus-slash me-1"></i> Jerawat
+                        </button>
+                    </li>
+                    <li class="nav-item flex-fill" role="presentation">
+                        <button class="nav-link w-100 fw-semibold py-2" id="skin-tab" data-bs-toggle="tab" data-bs-target="#skin-pane" type="button" role="tab" aria-controls="skin-pane" aria-selected="false" style="border-radius: 8px;">
+                            <i class="fa-solid fa-face-smile me-1"></i> Tipe Kulit
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="datasetTabContent">
+                    <!-- Acne Tab Pane -->
+                    <div class="tab-pane fade show active" id="acne-pane" role="tabpanel" aria-labelledby="acne-tab" tabindex="0">
+                        {% set max_acne = acne_stats.totals.values() | max if acne_stats.totals else 1 %}
+                        {% set acne_info = [
+                            ('Blackheads', '👃', 'Komedo Hitam', '#FF8099', 'dataset/acne_types/AcneDataset/*/Blackheads/'),
+                            ('Cyst', '🌋', 'Nodul / Kista', '#FFAAA6', 'dataset/acne_types/AcneDataset/*/Cyst/'),
+                            ('Papules', '🔴', 'Papula', '#4ECDC4', 'dataset/acne_types/AcneDataset/*/Papules/'),
+                            ('Pustules', '🟡', 'Pustula', '#FFD580', 'dataset/acne_types/AcneDataset/*/Pustules/'),
+                            ('Whiteheads', '⚪', 'Komedo Putih', '#FFE66D', 'dataset/acne_types/AcneDataset/*/Whiteheads/'),
+                            ('None', '✨', 'Bebas Jerawat', '#95A5A6', 'dataset/acne_types/AcneDataset/*/none/')
+                        ] %}
+                        
+                        {% for key, emoji, label, color, folder in acne_info %}
+                            {% set count = acne_stats.totals.get(key, 0) %}
+                            {% set pct = (count / max_acne * 100) | round | int %}
+                            {% set train_cnt = acne_stats.splits.train.get(key, 0) %}
+                            {% set valid_cnt = acne_stats.splits.valid.get(key, 0) %}
+                            {% set test_cnt = acne_stats.splits.test.get(key, 0) %}
+                            
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div style="font-size:1.5rem; width:36px; text-align:center;">{{ emoji }}</div>
+                                <div style="flex:1;">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="fw-semibold" style="font-size:.9rem; color:var(--dark);">{{ label }}</span>
+                                        <span style="font-size:.82rem; color:var(--text-muted);" title="Train: {{ train_cnt }} | Valid: {{ valid_cnt }} | Test: {{ test_cnt }}">
+                                            <strong>{{ count }}</strong> gambar <span style="font-size:.7rem; opacity:.7;">({{ train_cnt }}/{{ valid_cnt }}/{{ test_cnt }})</span>
+                                        </span>
+                                    </div>
+                                    <div class="progress" style="height:8px; border-radius:50px; background:rgba(0,0,0,0.05);">
+                                        <div class="progress-bar" role="progressbar"
+                                             style="width:{{ pct }}%; border-radius:50px; background:{{ color }};"
+                                             aria-valuenow="{{ count }}" aria-valuemin="0" aria-valuemax="{{ max_acne }}"></div>
+                                    </div>
+                                    <code style="font-size:.71rem; color:var(--text-muted);">{{ folder }}</code>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        
+                        <hr style="border-color:var(--border);">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold" style="color:var(--dark);">Total Jerawat</span>
+                            <span class="fw-bold gradient-text">{{ acne_stats.grand_total }} gambar</span>
+                        </div>
+                    </div>
+
+                    <!-- Skin Tab Pane -->
+                    <div class="tab-pane fade" id="skin-pane" role="tabpanel" aria-labelledby="skin-tab" tabindex="0">
+                        {% set max_skin = skin_stats.totals.values() | max if skin_stats.totals else 1 %}
+                        {% set skin_info = [
+                            ('Dry', '🌵', 'Kulit Kering', '#FF6B6B', 'dataset/skin_types/Oily-Dry-Skin-Types/*/dry/'),
+                            ('Normal', '😊', 'Kulit Normal', '#B28DFF', 'dataset/skin_types/Oily-Dry-Skin-Types/*/normal/'),
+                            ('Oily', '💦', 'Kulit Berminyak', '#A0D8EF', 'dataset/skin_types/Oily-Dry-Skin-Types/*/oily/')
+                        ] %}
+                        
+                        {% for key, emoji, label, color, folder in skin_info %}
+                            {% set count = skin_stats.totals.get(key, 0) %}
+                            {% set pct = (count / max_skin * 100) | round | int %}
+                            {% set train_cnt = skin_stats.splits.train.get(key, 0) %}
+                            {% set valid_cnt = skin_stats.splits.valid.get(key, 0) %}
+                            {% set test_cnt = skin_stats.splits.test.get(key, 0) %}
+                            
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div style="font-size:1.5rem; width:36px; text-align:center;">{{ emoji }}</div>
+                                <div style="flex:1;">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="fw-semibold" style="font-size:.9rem; color:var(--dark);">{{ label }}</span>
+                                        <span style="font-size:.82rem; color:var(--text-muted);" title="Train: {{ train_cnt }} | Valid: {{ valid_cnt }} | Test: {{ test_cnt }}">
+                                            <strong>{{ count }}</strong> gambar <span style="font-size:.7rem; opacity:.7;">({{ train_cnt }}/{{ valid_cnt }}/{{ test_cnt }})</span>
+                                        </span>
+                                    </div>
+                                    <div class="progress" style="height:8px; border-radius:50px; background:rgba(0,0,0,0.05);">
+                                        <div class="progress-bar" role="progressbar"
+                                             style="width:{{ pct }}%; border-radius:50px; background:{{ color }};"
+                                             aria-valuenow="{{ count }}" aria-valuemin="0" aria-valuemax="{{ max_skin }}"></div>
+                                    </div>
+                                    <code style="font-size:.71rem; color:var(--text-muted);">{{ folder }}</code>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        
+                        <hr style="border-color:var(--border);">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold" style="color:var(--dark);">Total Tipe Kulit</span>
+                            <span class="fw-bold gradient-text">{{ skin_stats.grand_total }} gambar</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dataset generation info -->
+    <div class="glass-card no-hover fade-in-up">
+        <h3 class="h5 fw-bold mb-3"><i class="fa-solid fa-circle-info me-2" style="color:var(--brand-b);"></i>Tentang Metode Pembuatan Dataset</h3>
+        <div class="row g-4">
+            <div class="col-md-6">
+                <h6 class="fw-bold mb-2" style="color:var(--dark);">Generasi Gambar Sintetis</h6>
+                <p class="mb-0" style="font-size:.9rem; line-height:1.75;">
+                    Dataset dibuat secara sintetis menggunakan pustaka <strong>Pillow</strong> untuk menjamin 
+                    ketersediaan data dan kemudahan distribusi. Setiap gambar 160×160 piksel dihasilkan 
+                    dengan 7 variasi <em>skin tone</em> (dari sangat terang hingga gelap), variasi 
+                    pencahayaan acak, dan sedikit blur kamera untuk simulasi foto nyata.
+                </p>
+            </div>
+            <div class="col-md-6">
+                <h6 class="fw-bold mb-2" style="color:var(--dark);">Augmentasi Saat Training</h6>
+                <p class="mb-0" style="font-size:.9rem; line-height:1.75;">
+                    Selain variasi bawaan dataset, model juga dilatih dengan <strong>data augmentation</strong> 
+                    secara real-time: flip horizontal, rotasi ±12°, zoom ±12%, perubahan kecerahan ±20%, 
+                    dan kontras ±20%. Ini membuat model lebih <em>robust</em> terhadap foto wajah nyata 
+                    dengan berbagai kondisi.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-5 fade-in-up">
+        <a href="/analyze" class="btn btn-primary-custom px-5">
+            <i class="fa-solid fa-upload me-2"></i>Mulai Deteksi Kulitmu
+        </a>
+    </div>
+
+</main>
+</div>
+
+<footer>
+    <div class="container">
+        <span class="brand"><i class="fa-solid fa-wand-magic-sparkles"></i> MeiSkinGlow</span>
+        <p class="mb-0" style="font-size:.8rem; opacity:.5;">Dibuat untuk tugas Pengantar Kecerdasan Buatan · 2026</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

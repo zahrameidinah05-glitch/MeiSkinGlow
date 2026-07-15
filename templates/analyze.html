@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MeiSkinGlow — Analisis Wajah</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <style>
+        .nav-pills .nav-link {
+            color: var(--text-muted);
+            font-weight: 600;
+            background: transparent;
+            transition: all 0.3s ease;
+        }
+        .nav-pills .nav-link.active {
+            background: var(--gradient-main) !important;
+            color: #fff !important;
+            box-shadow: var(--shadow-sm);
+        }
+        .nav-pills .nav-link:hover:not(.active) {
+            color: var(--brand-b);
+            background: rgba(255, 94, 126, 0.05);
+        }
+        .btn-outline-custom {
+            border: 2px solid var(--brand-b);
+            color: var(--brand-b);
+            background: transparent;
+            border-radius: var(--radius-btn);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+        .btn-outline-custom:hover {
+            background: var(--gradient-main);
+            border-color: transparent;
+            color: #fff;
+            box-shadow: var(--shadow-sm);
+        }
+    </style>
+</head>
+<body>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg">
+    <div class="container justify-content-center">
+        <a class="navbar-brand m-0" href="/"><i class="fa-solid fa-wand-magic-sparkles"></i> MeiSkinGlow</a>
+    </div>
+</nav>
+
+<div class="page-content">
+<main class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-xl-6">
+
+            <!-- Page header -->
+            <div class="text-center mb-4 fade-in-up">
+                <span class="pill-badge mb-3"><i class="fa-solid fa-wand-magic-sparkles"></i> Pindai AI Pintar</span>
+                <h1 class="h2 fw-bold mb-2">Cek Kulit Wajahmu</h1>
+                <p class="mb-0" style="font-size:.95rem;">Upload foto wajah atau ambil langsung menggunakan kamera aktif perangkatmu.</p>
+            </div>
+
+            <!-- Flask error banner -->
+            {% if error_message %}
+            <div class="alert-custom mb-4 fade-in-up">
+                <span class="alert-icon">⚠️</span>
+                <div><strong>Analisis Gagal:</strong> {{ error_message }}</div>
+            </div>
+            {% endif %}
+
+            <!-- JS error banner -->
+            <div id="js-error" class="alert-custom mb-4" style="display:none;">
+                <span class="alert-icon">⚠️</span>
+                <div id="js-error-msg">Terjadi kesalahan.</div>
+            </div>
+
+            <!-- Card container -->
+            <div class="glass-card no-hover fade-in-up delay-1">
+
+                <!-- Navigation Tabs -->
+                <ul class="nav nav-pills nav-justified mb-4 p-1 bg-light-subtle rounded-pill border" id="mode-tabs">
+                    <li class="nav-item">
+                        <button type="button" class="nav-link active rounded-pill py-2" id="tab-upload" onclick="switchMode('upload')">
+                            <i class="fa-solid fa-cloud-arrow-up me-2"></i>Unggah Foto
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button type="button" class="nav-link rounded-pill py-2" id="tab-camera" onclick="switchMode('camera')">
+                            <i class="fa-solid fa-camera me-2"></i>Kamera Langsung
+                        </button>
+                    </li>
+                </ul>
+
+                <form id="analyze-form" action="/process" method="POST" enctype="multipart/form-data">
+                    <input type="file" id="file-input" name="file" accept="image/*" style="display:none">
+
+                    <!-- ── UPLOAD MODE ───────────────────────────────────── -->
+                    <div id="upload-panel">
+                        <!-- Drop zone -->
+                        <div class="upload-zone" id="upload-zone">
+                            <span class="upload-icon"><i class="fa-solid fa-cloud-arrow-up"></i></span>
+                            <h4>Seret & Lepas foto di sini</h4>
+                            <p>atau klik untuk memilih berkas (JPG, PNG, WEBP)</p>
+                        </div>
+                    </div>
+
+                    <!-- ── CAMERA MODE ───────────────────────────────────── -->
+                    <div id="camera-panel" style="display:none">
+                        <div class="video-container position-relative rounded-4 overflow-hidden bg-dark mb-3 mx-auto" style="aspect-ratio: 4/3; max-width: 400px; box-shadow: var(--shadow-md);">
+                            <video id="video-feed" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
+                            <canvas id="capture-canvas" style="display:none"></canvas>
+                        </div>
+                        <div class="text-center mb-3">
+                            <button type="button" class="btn btn-outline-custom px-4 py-2" id="btn-snap" onclick="takeSnapshot()">
+                                <i class="fa-solid fa-camera me-2"></i>Ambil Foto Wajah
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Preview (Shared for both modes) -->
+                    <div class="preview-wrap mt-3" id="upload-preview" style="display:none">
+                        <img id="preview-img" src="" alt="Preview">
+                        <div class="scan-line" id="scan-line"></div>
+                        <button type="button" class="btn btn-sm position-absolute top-0 end-0 m-2"
+                                id="btn-clear"
+                                style="background:rgba(0,0,0,0.55);color:#fff;border:none;border-radius:50px;padding:4px 12px;font-size:.8rem;"
+                                onclick="clearUpload()">
+                            <i class="fa-solid fa-xmark me-1"></i>Hapus
+                        </button>
+                    </div>
+
+                    <!-- Submit button (Shared) -->
+                    <div class="text-center mt-4" id="submit-wrap">
+                        <button type="submit" class="btn btn-primary-custom px-5" id="btn-analyze" disabled>
+                            <i class="fa-solid fa-wand-magic-sparkles me-2"></i>Analisis Sekarang
+                        </button>
+                        <p class="mt-2 mb-0" style="font-size:.8rem; color:var(--text-muted);">Foto diproses secara instan di server lokal Anda.</p>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tips -->
+            <div class="glass-card no-hover mt-3 fade-in-up delay-2" style="padding:1.25rem 1.5rem;">
+                <h6 class="fw-bold mb-2" style="font-family:'Outfit',sans-serif;"><i class="fa-solid fa-lightbulb me-2" style="color:var(--brand-a);"></i>Tips Hasil Foto Akurat</h6>
+                <ul class="mb-0" style="padding-left:1.2rem; font-size:.86rem; color:var(--text-muted); line-height:1.8;">
+                    <li>Gunakan pencahayaan yang cukup dan merata.</li>
+                    <li>Hadapkan wajah langsung ke kamera (tidak miring).</li>
+                    <li>Pastikan tidak ada rambut atau kacamata tebal menutupi wajah.</li>
+                    <li>Hindari foto wajah dengan filter atau makeup tebal.</li>
+                </ul>
+            </div>
+
+        </div>
+    </div>
+</main>
+</div>
+
+<!-- Loading overlay -->
+<div class="loading-overlay" id="loading-overlay">
+    <div class="spinner-ring"></div>
+    <div class="loading-title">Memindai Kulit…</div>
+    <div class="loading-sub" id="loading-status">Mempersiapkan sistem…</div>
+    <div class="loading-steps" id="loading-steps">
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+    <div class="container">
+        <span class="brand"><i class="fa-solid fa-wand-magic-sparkles"></i> MeiSkinGlow</span>
+        <p class="mb-0" style="font-size:.8rem; opacity:.5;">Dibuat untuk tugas Pengantar Kecerdasan Buatan · 2026</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════
+//  MeiSkinGlow — Analyze Page Logic
+// ═══════════════════════════════════════════════════════════
+
+const uploadZone      = document.getElementById('upload-zone');
+const fileInput       = document.getElementById('file-input');
+const uploadPreview   = document.getElementById('upload-preview');
+const previewImg      = document.getElementById('preview-img');
+const btnAnalyze      = document.getElementById('btn-analyze');
+const analyzeForm     = document.getElementById('analyze-form');
+const loadingOverlay  = document.getElementById('loading-overlay');
+const loadingStatus   = document.getElementById('loading-status');
+const loadingSteps    = document.getElementById('loading-steps').querySelectorAll('span');
+const jsError         = document.getElementById('js-error');
+const jsErrorMsg      = document.getElementById('js-error-msg');
+
+let stream = null;
+
+// ── Error helpers ────────────────────────────────────────────
+function showError(msg) {
+    jsErrorMsg.textContent = msg;
+    jsError.style.display = 'flex';
+    jsError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function hideError() { jsError.style.display = 'none'; }
+
+// ── Switch mode (Upload vs Camera) ───────────────────────────
+async function switchMode(mode) {
+    hideError();
+    clearUpload(false);
+    
+    if (mode === 'camera') {
+        document.getElementById('upload-panel').style.display = 'none';
+        document.getElementById('camera-panel').style.display = 'block';
+        document.getElementById('tab-upload').classList.remove('active');
+        document.getElementById('tab-camera').classList.add('active');
+        
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+                audio: false
+            });
+            document.getElementById('video-feed').srcObject = stream;
+        } catch (err) {
+            console.error(err);
+            showError("Tidak dapat mengakses kamera wajah. Pastikan Anda menyetujui izin kamera pada browser Anda.");
+            switchMode('upload');
+        }
+    } else {
+        document.getElementById('upload-panel').style.display = 'block';
+        document.getElementById('camera-panel').style.display = 'none';
+        document.getElementById('tab-upload').classList.add('active');
+        document.getElementById('tab-camera').classList.remove('active');
+        stopCamera();
+    }
+}
+
+function stopCamera() {
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+    }
+    document.getElementById('video-feed').srcObject = null;
+}
+
+// ── Take Snapshot ─────────────────────────────────────────────
+function takeSnapshot() {
+    const video = document.getElementById('video-feed');
+    const canvas = document.getElementById('capture-canvas');
+    const ctx = canvas.getContext('2d');
+    
+    if (!video.srcObject) return;
+    
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    // Draw mirrored to look like screen/mirror reflection
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    ctx.setTransform(1, 0, 0, 1, 0, 0); // reset transform
+    
+    const dataUrl = canvas.toDataURL('image/png');
+    stopCamera();
+    
+    try {
+        const blob = dataURLtoBlob(dataUrl);
+        const file = new File([blob], "camera_capture.png", {type: "image/png"});
+        
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        fileInput.files = dataTransfer.files;
+        
+        previewImg.src = dataUrl;
+        uploadPreview.style.display = 'block';
+        document.getElementById('camera-panel').style.display = 'none';
+        btnAnalyze.disabled = false;
+    } catch (e) {
+        console.error(e);
+        showError("Gagal mengolah gambar tangkapan kamera.");
+        switchMode('camera');
+    }
+}
+
+function dataURLtoBlob(dataurl) {
+    var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+        bstr = atob(arr[arr.length - 1]), n = bstr.length, u8arr = new Uint8Array(n);
+    while(n--){
+        u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], {type:mime});
+}
+
+// ── Upload handling ──────────────────────────────────────────
+uploadZone.addEventListener('click', () => fileInput.click());
+
+uploadZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    uploadZone.classList.add('drag-over');
+});
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+uploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadZone.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);
+});
+
+fileInput.addEventListener('change', e => {
+    if (e.target.files[0]) loadFile(e.target.files[0]);
+});
+
+function loadFile(file) {
+    if (!file.type.startsWith('image/')) { showError('Silakan pilih berkas gambar valid (JPG/PNG/WEBP).'); return; }
+    hideError();
+    const reader = new FileReader();
+    reader.onload = ev => {
+        previewImg.src = ev.target.result;
+        uploadPreview.style.display = 'block';
+        uploadZone.style.display    = 'none';
+        btnAnalyze.disabled         = false;
+    };
+    reader.readAsDataURL(file);
+}
+
+function clearUpload(shouldSwitchMode = true) {
+    fileInput.value             = '';
+    previewImg.src              = '';
+    uploadPreview.style.display = 'none';
+    stopCamera();
+    
+    const isCamera = document.getElementById('tab-camera').classList.contains('active');
+    if (isCamera) {
+        document.getElementById('camera-panel').style.display = 'block';
+        uploadZone.style.display    = 'none';
+        btnAnalyze.disabled         = true;
+        // Reinit camera feed
+        if (shouldSwitchMode) {
+            switchMode('camera');
+        }
+    } else {
+        document.getElementById('camera-panel').style.display = 'none';
+        uploadZone.style.display    = 'block';
+        btnAnalyze.disabled         = true;
+    }
+}
+
+// ── Loading screen + form submit ────────────────────────────
+const STATUSES = [
+    'Membaca data gambar…',
+    'Menyesuaikan titik wajah…',
+    'Memindai area kulit wajah…',
+    'Mengekstrak informasi tekstur pori-pori…',
+    'Menganalisis kondisi kelembapan…',
+    'Mencocokkan dengan profil kulit…',
+    'Menyiapkan rekomendasi skincare…',
+];
+let stepIdx = 0;
+
+analyzeForm.addEventListener('submit', function(e) {
+    stopCamera(); // Make sure stream is closed on submit
+    loadingOverlay.classList.add('active');
+    loadingStatus.textContent = STATUSES[0];
+    stepIdx = 0;
+    loadingSteps[0].classList.add('active');
+
+    let si = setInterval(() => {
+        stepIdx = Math.min(stepIdx + 1, STATUSES.length - 1);
+        loadingStatus.textContent = STATUSES[stepIdx];
+        loadingSteps.forEach((s, i) => s.classList.toggle('active', i === stepIdx));
+    }, 900);
+});
+</script>
+</body>
+</html>
