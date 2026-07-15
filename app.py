@@ -34,7 +34,8 @@ model_acne = None
 try:
     from tflite_runtime.interpreter import Interpreter
 except ImportError:
-    from tensorflow.lite import Interpreter
+    import tensorflow as tf
+    Interpreter = tf.lite.Interpreter
 
 def load_tflite_model(model_path):
     interpreter = Interpreter(model_path=model_path)
