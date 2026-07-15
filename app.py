@@ -32,7 +32,10 @@ model_skin = None
 model_acne = None
 
 try:
-    from tflite_runtime.interpreter import Interpreter
+    try:
+        from ai_edge_litert.interpreter import Interpreter
+    except ImportError:
+        from tflite_runtime.interpreter import Interpreter
 except ImportError:
     import tensorflow as tf
     Interpreter = tf.lite.Interpreter
